@@ -15,10 +15,12 @@ selected_option=$(printf '%s\n' "${options[@]}" | fzf --border=rounded --margin=
 case $selected_option in
   "Shutdown")
     notify-send "Shutting Down ..."
+    rfkill block bluetooth
     sudo shutdown -h now
     ;;
   "Reboot")
     notify-send "Rebooting ..."
+    rfkill block bluetooth
     sudo reboot
     ;;
   *)
