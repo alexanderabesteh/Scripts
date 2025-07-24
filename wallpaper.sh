@@ -4,9 +4,9 @@
 WALLPAPER_DIR="$HOME/Documents/Assets/Wallpapers"
 TRANSITION_TYPE="outer"
 INTERVAL=300  # 5 minutes
-LOCK_FILE="/tmp/niri_wallpaper_switcher.lock"
+LOCK_FILE="/tmp/hypr_wallpaper_switcher.lock"
 INDEX_FILE="$HOME/.cache/wallpaper_index.txt"
-LOG_FILE="$HOME/.cache/niri_wallpaper_switcher.log"
+LOG_FILE="$HOME/.cache/hypr_wallpaper_switcher.log"
 
 # Monitor configuration (run 'hyprctl monitors' to check your monitor)
 MONITOR="EDP-1"  # Change this to your monitor name
@@ -44,11 +44,26 @@ check_dependencies() {
         missing+=("mpvpaper")
     fi
 
+    if ! command -v hyprctl >/dev/null; then
+        missing+=("hyprctl")
+    fi
+
     if [ ${#missing[@]} -gt 0 ]; then
         log "Missing dependencies: ${missing[*]}"
         echo "ERROR: Missing required packages: ${missing[*]}" >&2
         echo "Install with: sudo xbps-install ${missing[*]}" >&2
         exit 1
+    fi
+}
+
+# Get current monitor if not configured
+detect_monitor() {
+    if [ -z "$MONITOR" ] || [ "$MONITOR" = "auto" ]; then
+        MONITOR=$(hyprctl monitors -j | jq -r '.[0].name')
+        if [ -z "$MONITOR" ]; then
+            log "Failed to detect monitor, using default DP-1"
+            MONITOR="DP-1"
+        fi
     fi
 }
 
@@ -154,6 +169,7 @@ switch_wallpaper() {
 main() {
     init_logging
     check_dependencies
+    detect_monitor
     init_swww
 
     case "$1" in
